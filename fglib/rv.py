@@ -520,9 +520,24 @@ class Gaussian(RandomVariable):
             A new Gaussian random variable representing the multiplication.
 
         """
-        W = self._W + other._W
-        Wm = self._Wm + other._Wm
-        return Gaussian.inf_form(W, Wm, *self.dim)
+        dim = list(self._dim)
+        for d in other._dim:
+            if d not in dim:
+                dim.append(d)
+        w_self = np.zeros((len(dim), len(dim)))
+        wm_self = np.zeros((len(dim), 1))
+        w = np.zeros((len(dim), len(dim)))
+        wm = np.zeros((len(dim), 1))
+
+        idxs_self = [dim.index(d) for d in self._dim]
+        w_self[np.ix_(idxs_self, idxs_self)] = self._W
+        wm_self[np.ix_(idxs_self, [0])] = self._Wm
+        idxs_other = [dim.index(d) for d in other._dim]
+        w[np.ix_(idxs_other, idxs_other)] = other._W
+        wm[np.ix_(idxs_other, [0])] = other._Wm
+        w = w + w_self
+        wm = wm + wm_self
+        return Gaussian.inf_form(w, wm, *dim)
 
     def __iadd__(self, other):
         """Method for augmented addition.
