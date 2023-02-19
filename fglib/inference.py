@@ -17,6 +17,7 @@ from random import choice
 import networkx as nx
 
 from . import nodes
+from .nodes import NodeType
 
 
 def belief_propagation(graph, query_node=None):
@@ -158,9 +159,9 @@ def loopy_belief_propagation(model, iterations, query_node=(), order=None):
     """
     if order is None:
         fn = [n for (n, attr) in model.nodes(data=True)
-              if attr["type"] == "fn"]
+              if attr["type"] == NodeType.factor_node]
         vn = [n for (n, attr) in model.nodes(data=True)
-              if attr["type"] == "vn"]
+              if attr["type"] == NodeType.variable_node]
         order = fn + vn
     return _schedule(model, 'spa', iterations, query_node, order)
 
@@ -174,9 +175,9 @@ def mean_field(model, iterations, query_node=(), order=None):
     """
     if order is None:
         fn = [n for (n, attr) in model.nodes(data=True)
-              if attr["type"] == "fn"]
+              if attr["type"] == NodeType.factor_node]
         vn = [n for (n, attr) in model.nodes(data=True)
-              if attr["type"] == "vn"]
+              if attr["type"] == NodeType.variable_node]
         order = fn + vn
     return _schedule(model, 'mf', iterations, query_node, order)
 
@@ -197,7 +198,7 @@ def _schedule(model, method, iterations, query_node, order):
         # Visit nodes in predefined order
         for n in order:
             for neighbor in nx.all_neighbors(model, n):
-                msg = getattr(n, method)(model, neighbor)
+                msg = getattr(n, method)(neighbor)
                 model[n][neighbor]['object'].set_message(n, neighbor, msg)
 
         # Beliefs of query nodes

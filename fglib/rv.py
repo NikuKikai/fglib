@@ -466,11 +466,17 @@ class Gaussian(RandomVariable):
 
     @property
     def mean(self):
-        return np.dot(np.linalg.inv(self._W), self._Wm)
+        try:
+            return np.dot(np.linalg.inv(self._W), self._Wm)
+        except:
+            return np.zeros_like(self._Wm)
 
     @property
     def cov(self):
-        return np.linalg.inv(self._W)
+        try:
+            return np.linalg.inv(self._W)
+        except:
+            return np.ones_like(self._W) * np.inf
 
     @property
     def dim(self):
@@ -478,9 +484,12 @@ class Gaussian(RandomVariable):
 
     def __str__(self):
         """Return string representation of the Gaussian random variable."""
-        mean = np.array2string(self.mean, separator=',', sign=' ')
-        cov = np.array2string(self.cov, separator=',', sign=' ')
-        return "%s\n%s" % (mean, cov)
+        # mean = np.array2string(self.mean, separator=',', sign=' ')
+        # cov = np.array2string(self.cov, separator=',', sign=' ')
+        # return f"[m={mean}, cov={cov}]"
+        wm = np.array2string(self._Wm, separator=',', sign=' ')
+        w = np.array2string(self._W, separator=',', sign=' ')
+        return f"[Wm={wm}, W={w}]"
 
     def __add__(self, other):
         """Add other to self and return the result.

@@ -172,7 +172,10 @@ class VNode(Node):
 
             # Product over incoming messages
             for n in self.neighbors(tnode):
-                msg *= self.graph[n][self]['object'].get_message(n, self)
+                _msg = self.graph[n][self]['object'].get_message(n, self)
+                if _msg is None:
+                    continue
+                msg *= _msg
 
             return msg
 
@@ -265,7 +268,10 @@ class FNode(Node):
 
         # Product over incoming messages
         for n in self.neighbors(tnode):
-            msg *= self.graph[n][self]['object'].get_message(n, self)
+            _msg = self.graph[n][self]['object'].get_message(n, self)
+            if _msg is None:
+                continue
+            msg *= _msg
 
         # Integration/Summation over incoming variables
         for n in self.neighbors(tnode):
