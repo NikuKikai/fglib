@@ -18,6 +18,7 @@ from types import MethodType
 
 import networkx as nx
 import numpy as np
+from .rv import RandomVariable
 
 
 class NodeType(Enum):
@@ -32,21 +33,26 @@ class Node(ABC):
 
     """Abstract base class for all nodes."""
 
-    def __init__(self, label):
+    def __init__(self, label, dims: list = None):
         """Create a node with an associated label."""
         self.__label = str(label)
         self.__graph = None
+        self._dims = [] if dims is None else dims
 
     def __str__(self):
         """Return string representation."""
         return self.__label
+
+    @property
+    def dims(self) -> list:
+        return self._dims
 
     @abstractproperty
     def type(self):
         """Specify the NodeType."""
 
     @property
-    def graph(self):
+    def graph(self) -> nx.Graph:
         return self.__graph
 
     @graph.setter
@@ -101,25 +107,19 @@ class VNode(Node):
 
     """
 
-    def __init__(self, label, rv_type, observed=False):
+    def __init__(self, label, init: RandomVariable, observed=False):
         """Create a variable node."""
         super().__init__(label)
-        self.init = rv_type.unity(self)
+        self.belief = init
+        self.unity = init.unity(*init.dim)
         self.observed = observed
+        self._dims.extend(init.dim)
 
     @property
     def type(self):
         return NodeType.variable_node
 
-    @property
-    def init(self):
-        return self.__init
-
-    @init.setter
-    def init(self, init):
-        self.__init = init
-
-    def belief(self, normalize=True):
+    def update_belief(self, normalize=True):
         """Return belief of the variable node.
 
         Args:
@@ -143,6 +143,8 @@ class VNode(Node):
         if normalize:
             belief = belief.normalize()
 
+        self.belief = belief
+
         return belief
 
     def maximum(self, normalize=True):
@@ -152,23 +154,23 @@ class VNode(Node):
             normalize: Boolean flag if belief should be normalized.
 
         """
-        b = self.belief(normalize)
+        b = self.update_belief(normalize)
         return np.amax(b.pmf)
 
     def argmax(self):
         """Return the argument for maximum probability of the variable node."""
         # In case of multiple occurrences of the maximum values,
         # the indices corresponding to the first occurrence are returned.
-        b = self.belief()
+        b = self.update_belief()
         return b.argmax(self)
 
     def spa(self, tnode):
         """Return message of the sum-product algorithm."""
         if self.observed:
-            return self.init
+            return self.unity
         else:
             # Initial message
-            msg = self.init
+            msg = self.unity
 
             # Product over incoming messages
             for n in self.neighbors(tnode):
@@ -202,7 +204,7 @@ class VNode(Node):
         if self.observed:
             return self.init
         else:
-            return self.belief(self.graph)
+            return self.update_belief(self.graph)
 
 
 class IOVNode(VNode):
@@ -259,6 +261,9 @@ class FNode(Node):
 
     @factor.setter
     def factor(self, factor):
+        self._dims.clear()
+        if factor is not None:
+            self._dims.extend(factor.dim)
         self.__factor = factor
 
     def spa(self, tnode):
@@ -274,8 +279,10 @@ class FNode(Node):
             msg *= _msg
 
         # Integration/Summation over incoming variables
+        dims = []
         for n in self.neighbors(tnode):
-            msg = msg.marginalize(n, normalize=False)
+            dims.extend(n.dims)
+        msg = msg.marginalize(*dims, normalize=False)
 
         return msg
 

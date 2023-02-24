@@ -437,7 +437,7 @@ class Gaussian(RandomVariable):
 
         """
         n = len(args)
-        return cls(np.diag(np.zeros(n)), np.diag(np.ones(n) * np.Inf), *args)
+        return cls.inf_form(np.diag(np.ones(n) * 0.001), np.zeros((n, 1)), *args)
 
     @classmethod
     def inf_form(cls, raw_W, raw_Wm, *args):
@@ -616,12 +616,23 @@ class Gaussian(RandomVariable):
             A new Gaussian random variable representing the marginal.
 
         """
-        axis = tuple(idx for idx, d in enumerate(self.dim) if d not in dims)
-        mean = self.mean[np.ix_(axis, [0])]
-        cov = self.cov[np.ix_(axis, axis)]
+        info = self._Wm
+        prec = self._W
+        axis_a = [idx for idx, d in enumerate(self.dim) if d not in dims]
+        axis_b = [idx for idx, d in enumerate(self.dim) if d in dims]
+        info_a = info[np.ix_(axis_a, [0])]
+        prec_aa = prec[np.ix_(axis_a, axis_a)]
+        info_b = info[np.ix_(axis_b, [0])]
+        prec_ab = prec[np.ix_(axis_a, axis_b)]
+        prec_ba = prec[np.ix_(axis_b, axis_a)]
+        prec_bb = prec[np.ix_(axis_b, axis_b)]
+
+        prec_bb_inv = np.linalg.inv(prec_bb)
+        info_ = info_a - prec_ab @ prec_bb_inv @ info_b
+        prec_ = prec_aa - prec_ab @ prec_bb_inv @ prec_ba
 
         new_dims = tuple(d for d in self.dim if d not in dims)
-        return Gaussian(mean, cov, *new_dims)
+        return Gaussian.inf_form(prec_, info_, *new_dims)
 
     def maximize(self, *dims):
         """Return the maximum for given dimensions.

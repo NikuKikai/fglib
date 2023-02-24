@@ -47,45 +47,45 @@ class TestInference(unittest.TestCase):
         inference.sum_product(self.fg, query_node=self.x1)
 
         # Test belief of variable node x1
-        belief = self.x1.belief(normalize=False)
+        belief = self.x1.update_belief(normalize=False)
         res = np.array([0.183, 0.147])
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x1,))
 
-        belief = self.x1.belief()
+        belief = self.x1.update_belief()
         res /= np.sum(res)
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x1,))
 
         # Test belief of variable node x2
-        belief = self.x2.belief(normalize=False)
+        belief = self.x2.update_belief(normalize=False)
         res = np.array([0.294, 0.036])
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x2,))
 
-        belief = self.x2.belief()
+        belief = self.x2.update_belief()
         res /= np.sum(res)
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x2,))
 
         # Test belief of variable node x3
-        belief = self.x3.belief(normalize=False)
+        belief = self.x3.update_belief(normalize=False)
         res = np.array([0.162, 0.168])
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x3,))
 
-        belief = self.x3.belief()
+        belief = self.x3.update_belief()
         res /= np.sum(res)
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x3,))
 
         # Test belief of variable node x4
-        belief = self.x4.belief(normalize=False)
+        belief = self.x4.update_belief(normalize=False)
         res = np.array([0.162, 0.168])
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x4,))
 
-        belief = self.x4.belief()
+        belief = self.x4.update_belief()
         res /= np.sum(res)
         npt.assert_almost_equal(belief.pmf, res)
         self.assertEqual(belief.dim, (self.x4,))

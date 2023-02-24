@@ -109,8 +109,7 @@ class FactorGraph(nx.Graph):
             A list of all variable nodes.
 
         """
-        return [n for (n, d) in self.nodes(data=True)
-                if d['type'] == nodes.NodeType.variable_node]
+        return [n for n in self.nodes if n.type == nodes.NodeType.variable_node]
 
     def get_fnodes(self):
         """Return factor nodes of the factor graph.
@@ -119,8 +118,7 @@ class FactorGraph(nx.Graph):
             A list of all factor nodes.
 
         """
-        return [n for (n, d) in self.nodes(data=True)
-                if d['type'] == nodes.NodeType.factor_node]
+        return [n for n in self.nodes if n.type == nodes.NodeType.factor_node]
 
 
 def ForneyFactorGraph(FactorGraph):
